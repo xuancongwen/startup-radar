@@ -1,0 +1,29 @@
+[Unit]
+Description=Startup Radar read-only HTTP API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=radar
+Group=radar
+EnvironmentFile=/etc/startup-radar/env
+WorkingDirectory=/var/lib/startup-radar
+ExecStart=/opt/startup-radar/.venv/bin/startup-radar-serve \
+  --db /var/lib/startup-radar/radar.sqlite3 \
+  --host ${RADAR_BIND} \
+  --port ${RADAR_PORT}
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+# Read-only opens still need the WAL shared-memory file, so the data directory stays writable.
+ReadWritePaths=/var/lib/startup-radar
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

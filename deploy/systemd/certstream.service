@@ -1,0 +1,23 @@
+[Unit]
+Description=Certificate Transparency aggregator (certstream-server-go)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=radar
+Group=radar
+ExecStart=/usr/local/bin/certstream-server-go -c /etc/startup-radar/certstream.yaml
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

@@ -43,6 +43,7 @@ class Store:
             );
             CREATE INDEX IF NOT EXISTS domains_status ON domains(status, first_seen_at);
             CREATE INDEX IF NOT EXISTS domains_shortlist ON domains(shortlist_day);
+            CREATE INDEX IF NOT EXISTS domains_candidates ON domains(status, checked_at, domain);
             UPDATE domains SET status='pending' WHERE status='processing';
         """)
         self.rebuild_exports()

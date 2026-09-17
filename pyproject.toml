@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "startup-radar"
-version = "0.1.0"
-description = "Bounded Certificate Transparency startup discovery PoC"
+version = "0.2.0"
+description = "Bounded Certificate Transparency startup discovery with a read-only HTTP feed"
 requires-python = ">=3.11"
 dependencies = [
   "httpx==0.28.1", "httpcore==1.0.9",
@@ -18,6 +18,7 @@ test = ["pytest>=8,<10", "pytest-asyncio>=0.25,<2"]
 
 [project.scripts]
 startup-radar = "startup_radar.pipeline:main"
+startup-radar-serve = "startup_radar.serve:main"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -1,0 +1,35 @@
+[Unit]
+Description=Startup Radar pipeline (CT sampling, homepage scoring)
+After=network-online.target certstream.service
+Wants=network-online.target certstream.service
+
+[Service]
+User=radar
+Group=radar
+EnvironmentFile=/etc/startup-radar/env
+WorkingDirectory=/var/lib/startup-radar
+ExecStart=/opt/startup-radar/.venv/bin/startup-radar \
+  --feed-url ws://127.0.0.1:8080/ \
+  --db /var/lib/startup-radar/radar.sqlite3 \
+  --output /var/lib/startup-radar/shortlists \
+  --max-per-minute ${RADAR_MAX_PER_MINUTE} \
+  --concurrency ${RADAR_CONCURRENCY} \
+  --threshold ${RADAR_THRESHOLD} \
+  --user-agent "${RADAR_USER_AGENT}"
+# SIGTERM stops intake and drains admitted work; give it time before SIGKILL.
+KillSignal=SIGTERM
+TimeoutStopSec=45
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/startup-radar
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

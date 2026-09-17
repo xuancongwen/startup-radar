@@ -1,0 +1,17 @@
+# Overlay for a host with a public DNS name (a DigitalOcean droplet): Caddy obtains the certificate
+# and proxies to the API. Usage: docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env for the TLS overlay}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [api]
+volumes:
+  caddy_data:
+  caddy_config:

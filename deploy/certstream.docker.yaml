@@ -1,0 +1,13 @@
+# certstream-server-go config for the compose stack. The container publishes no port, so
+# only other services on the compose network can connect; the whitelist is therefore open.
+webserver:
+  listen_addr: "0.0.0.0"
+  listen_port: 8080
+  real_ip: false
+  whitelist: []
+  full_url: "/full-stream"
+  lite_url: "/"
+  domains_only_url: "/domains-only"
+  compression_enabled: false
+prometheus:
+  enabled: false

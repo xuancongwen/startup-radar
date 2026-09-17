@@ -1,0 +1,55 @@
+# Three services on one box: the CT aggregator, the pipeline that samples and scores it, and the
+# read-only API that MondayFlow instances (or anything else) poll. Copy .env.example to .env first.
+# The API is published on localhost only; put docker-compose.tls.yml on top for a public domain,
+# or set RADAR_BIND to a LAN address on a homelab host you trust.
+services:
+  certstream:
+    image: 0rickyy0/certstream-server-go:v1.10.1
+    restart: unless-stopped
+    volumes:
+      - ./deploy/certstream.docker.yaml:/app/config.yaml:ro
+    # No ports: only the pipeline, on this compose network, can reach it.
+
+  pipeline:
+    build: .
+    restart: unless-stopped
+    user: "${RADAR_UID:-1000}:${RADAR_GID:-1000}"
+    depends_on: [certstream]
+    volumes:
+      - ${RADAR_DATA:-./data}:/data
+    command:
+      - startup-radar
+      - --feed-url
+      - ws://certstream:8080/
+      - --db
+      - /data/radar.sqlite3
+      - --output
+      - /data/shortlists
+      - --max-per-minute
+      - "${RADAR_MAX_PER_MINUTE:-20}"
+      - --concurrency
+      - "${RADAR_CONCURRENCY:-10}"
+      - --threshold
+      - "${RADAR_THRESHOLD:-7}"
+      - --user-agent
+      - "${RADAR_USER_AGENT:-StartupRadar/0.2 (startup discovery research)}"
+    stop_grace_period: 30s
+
+  api:
+    build: .
+    restart: unless-stopped
+    user: "${RADAR_UID:-1000}:${RADAR_GID:-1000}"
+    volumes:
+      - ${RADAR_DATA:-./data}:/data
+    environment:
+      RADAR_TOKENS: ${RADAR_TOKENS:?set RADAR_TOKENS in .env}
+      RADAR_MIN_SCORE: ${RADAR_MIN_SCORE:-10}
+    command: ["startup-radar-serve", "--db", "/data/radar.sqlite3", "--host", "0.0.0.0", "--port", "8081"]
+    ports:
+      - "${RADAR_BIND:-127.0.0.1}:${RADAR_PORT:-8081}:8081"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8081/health', timeout=3).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
